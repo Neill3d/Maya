@@ -1,0 +1,1 @@
+// declare special varsint $scale_val = 7.5;// get name's of selection geometrystring	$selObjects[] = `ls -sl`;string $obj;int $i = 0;for ($obj in $selObjects) {	$tX = `getAttr ($obj + ".translateX")`;	$tY = `getAttr ($obj + ".translateY")`;	$tZ = `getAttr ($obj + ".translateZ")`;	$tX *= scale_val;	$tY *= scale_val;	$tZ *= scale_val;	move -a $tX $tY $tZ $obj;}

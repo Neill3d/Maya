@@ -1,0 +1,1 @@
+currentTime 1;int $i=0;float $tX = `getAttr( "root.translateX" )`;float $tY = `getAttr( "root.translateY" )`;float $tZ = `getAttr( "root.translateZ" )`;$tX = -$tX;$tZ = -$tZ;move -r $tX 0 $tZ;for( $i=2; $i < 80; $i++ ) {  currentTime $i;  move -r $tX 0 $tZ; };

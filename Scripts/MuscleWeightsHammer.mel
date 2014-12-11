@@ -1,0 +1,91 @@
+/////////////////////////////////////////////////////////////////
+//
+// Hammer for the Muscle weights
+//
+// Select one geometry vertex which has Muscle Weights
+// Script will assign average weights for this vertex from neighbors
+//
+// Usage: 
+//    select one vertex on your muscle mesh and
+//    call global procedure MuscleWeightsHammer()
+//
+// Author Sergey Solohin (Neill3d)
+//  e-mail to: s@neill3d.com
+//   www.neill3d.com
+//
+
+global proc string listMuscleSystem(string $object)
+{
+    if (!`objExists $object`) error "Object provided as argument dosen't exist - listMuscleSystem proc";
+
+    string $objHist[] = `listHistory -pdo 1 $object`;
+    string $muscleSystems[] = `ls -type "cMuscleSystem" $objHist`;
+    if (`size $muscleSystems` > 0)
+        return $muscleSystems[0];
+    else
+        return 0;
+}
+
+global proc MuscleWeightsHammer()
+{
+    string $sel[];
+    $sel = `ls -sl`;
+    
+    print $sel;
+    
+    if (size($sel) > 0) {
+        
+        string $vertSel = $sel[0];
+        
+        // get object anme from vertex selection string 
+        string $buffer[];
+        $numTokens = `tokenize $vertSel "." $buffer`;
+        
+        if ($numTokens > 0)
+        {
+            string $obj = $buffer[0];
+            print ($obj + "\n");
+            
+            // get muscle system nodes
+            string $muscleSystem = listMuscleSystem($obj);
+            print ($muscleSystem + "\n" );
+    
+            string $muscles[] = `cMuscleQuery -system $muscleSystem -muscle` ; // Return all muscles tied to the system node.
+            
+            // get connected vertices list
+            
+            ConvertSelectionToEdges;
+            ConvertSelectionToVertices;
+           
+            string $sel[];
+            $sel = `ls -sl`;
+            
+            // for hammer vert, lets make mid weights from the connected vertices
+            
+            string $list[] = $sel;
+            string $itemsToRemove[] = { $vertSel };
+            string $diff[] = stringArrayRemoveExact($itemsToRemove, $list);
+            
+            for ($mus in $muscles)
+            {
+                float $newWeight = 0.0;
+                
+                for ($vert in $diff)
+                {
+                    float $wt[] = `cMuscleWeight -system $muscleSystem -mus $mus -wt "sticky" -q -v $vert` ; // QUERY Sticky Weight
+                    $newWeight += $wt[0];
+                }
+                
+                if (size($diff) > 0) $newWeight = $newWeight / size($diff);
+                if ($newWeight < 0.001) $newWeight = 0.0;
+    
+    
+                print ($mus + " - " + string($newWeight) + "\n");
+    
+                cMuscleWeight -system $muscleSystem -muscle $mus -v $newWeight -wt "sticky" -normalize true $vertSel ;  // Set Sticky Weight to 0 with normalization on
+            }
+        }
+        
+        select -r $vertSel;
+    }
+}
